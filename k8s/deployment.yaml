@@ -1,0 +1,68 @@
+# VigilCloud on Akamai LKE.
+# Build for the cluster nodes, push, then put the image name below:
+#   docker build --platform linux/amd64 -t YOUR_REGISTRY/vigilcloud:latest .
+#   docker push YOUR_REGISTRY/vigilcloud:latest
+# Create the secret from the repo .env. Do not commit that secret.
+#   kubectl create secret generic app-env --from-env-file=.env
+#   kubectl apply -f k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vigilcloud
+  labels:
+    app: vigilcloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vigilcloud
+  template:
+    metadata:
+      labels:
+        app: vigilcloud
+    spec:
+      containers:
+        - name: vigilcloud
+          image: YOUR_REGISTRY/vigilcloud:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8501
+          envFrom:
+            - secretRef:
+                name: app-env
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: http
+            initialDelaySeconds: 25
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 768Mi
+---
+# LoadBalancer creates a NodeBalancer. Port 80 on that address reaches Streamlit on 8501.
+# Deleting this Service deletes the NodeBalancer. Delete it before the cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: vigilcloud
+  labels:
+    app: vigilcloud
+spec:
+  type: LoadBalancer
+  selector:
+    app: vigilcloud
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8501

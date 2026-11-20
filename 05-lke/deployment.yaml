@@ -1,0 +1,32 @@
+# A Deployment keeps one copy of a container running and replaces it if it stops.
+# traefik/whoami is a 5 MB web server that replies with the name of the pod that answered.
+# To run your own app, change image: and turn on the envFrom block at the end. See "Run your own image" in 05-lke/README.md.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+        - name: hello
+          image: traefik/whoami:v1.12.0
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: PORT  # the apps in this repo read PORT, so they listen on 80 too
+              value: "80"
+          # Remove the "# " from the start of the last four lines only after image: above names your image.
+          # traefik/whoami prints every environment variable to anyone who asks, and envFrom adds your .env to them.
+          # envFrom:
+          #   - secretRef:
+          #       name: app-env
+          #       optional: true

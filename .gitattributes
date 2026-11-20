@@ -1,0 +1,4 @@
+# Check out every text file with LF line endings, on Windows too.
+# With CRLF endings, bash stops on the first line of every script.
+* text=auto eol=lf
+*.png binary

@@ -1,0 +1,13 @@
+# A Service of type LoadBalancer makes LKE create a NodeBalancer with a public IP address
+# in front of the pods. Deleting this Service deletes that NodeBalancer. Delete it before the cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello
+spec:
+  type: LoadBalancer
+  selector:
+    app: hello
+  ports:
+    - port: 80
+      targetPort: http
