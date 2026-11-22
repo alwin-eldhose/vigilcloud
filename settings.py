@@ -1,8 +1,8 @@
 """Resolve VigilCloud settings from the environment.
 
-The portal reads the names in the build spec. When those are empty, it falls
-back to the Akamai workshop lab names already stored in this repo's `.env`
-(`AKAMAI_API_KEY`, `OBJ_*`, `PG*`), so a local demo works without renaming keys.
+Inference runs on Claude (ANTHROPIC_API_KEY). Object Storage and PostgreSQL use the
+Akamai names already stored in this repo's `.env` (`OBJ_*`, `PG*`). The spec names
+(`S3_*`, `DATABASE_URL`) are accepted as aliases.
 """
 
 from __future__ import annotations
@@ -17,8 +17,7 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / ".env", override=False)
 
-EMBEDDING_DIM = 4096
-INFERENCE_DEFAULT_URL = "https://api.akamai-inference.com/v1"
+CLAUDE_DEFAULT_MODEL = "claude-sonnet-4-6"
 
 
 def pick(*names: str, default: str = "") -> str:
@@ -59,13 +58,11 @@ def database_url() -> str:
 
 @dataclass(frozen=True)
 class Settings:
-    inference_key: str
-    inference_key_var: str
-    inference_base_url: str
-    inference_url_var: str
+    anthropic_key: str
+    anthropic_key_var: str
     chat_model: str
     vision_model: str
-    embedding_model: str
+    summary_model: str
     s3_endpoint: str
     s3_endpoint_var: str
     s3_region: str
@@ -79,7 +76,7 @@ class Settings:
 
     @property
     def inference_ready(self) -> bool:
-        return bool(self.inference_key and self.inference_base_url)
+        return bool(self.anthropic_key)
 
     @property
     def storage_ready(self) -> bool:
@@ -92,15 +89,11 @@ class Settings:
 
 def load_settings() -> Settings:
     return Settings(
-        inference_key=pick("AKAMAI_INFERENCE_API_KEY", "AKAMAI_API_KEY", "OPENAI_API_KEY"),
-        inference_key_var=which("AKAMAI_INFERENCE_API_KEY", "AKAMAI_API_KEY", "OPENAI_API_KEY"),
-        inference_base_url=pick(
-            "AKAMAI_INFERENCE_BASE_URL", "AKAMAI_BASE_URL", "OPENAI_BASE_URL", default=INFERENCE_DEFAULT_URL
-        ),
-        inference_url_var=which("AKAMAI_INFERENCE_BASE_URL", "AKAMAI_BASE_URL", "OPENAI_BASE_URL"),
-        chat_model=pick("CHAT_MODEL", default="qwen3-8-27b"),
-        vision_model=pick("VISION_MODEL", default="gemma-4-26b-a4b-it"),
-        embedding_model=pick("EMBEDDING_MODEL", default="qwen3-embedding-8b"),
+        anthropic_key=pick("ANTHROPIC_API_KEY"),
+        anthropic_key_var="ANTHROPIC_API_KEY",
+        chat_model=pick("CHAT_MODEL", default=CLAUDE_DEFAULT_MODEL),
+        vision_model=pick("VISION_MODEL", default=CLAUDE_DEFAULT_MODEL),
+        summary_model=pick("SUMMARY_MODEL", "CHAT_MODEL", default=CLAUDE_DEFAULT_MODEL),
         s3_endpoint=pick("S3_ENDPOINT_URL", "OBJ_ENDPOINT"),
         s3_endpoint_var=which("S3_ENDPOINT_URL", "OBJ_ENDPOINT"),
         s3_region=pick("S3_REGION", default="us-east-1"),

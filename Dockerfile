@@ -9,7 +9,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY settings.py db.py storage.py inference_verifier.py app.py ./
+COPY settings.py db.py storage.py inference_verifier.py sample_catalog.py app.py ./
 COPY samples ./samples
 COPY .streamlit ./.streamlit
 

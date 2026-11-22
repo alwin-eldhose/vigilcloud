@@ -1,4 +1,4 @@
-# Your settings and your key. check.py makes .env. Never commit it, or a copy such as .env.txt.
+# Settings and keys. Never commit .env, or a copy such as .env.txt.
 .env*
 !.env.example
 
@@ -10,5 +10,5 @@ __pycache__/
 # Cluster credentials
 *kubeconfig*.yaml
 
-# Instructor notes stay on the instructor's machine
-instructor/
+# macOS
+.DS_Store
